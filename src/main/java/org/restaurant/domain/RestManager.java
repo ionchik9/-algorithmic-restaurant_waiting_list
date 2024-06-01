@@ -3,6 +3,8 @@ package org.restaurant.domain;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.restaurant.Main.MAX_GROUP_SIZE;
+
 public class RestManager {
     private Map<Integer, List<Table>> tablesBySize;
     private final Queue<ClientsGroup> waitingQueue;
@@ -11,7 +13,7 @@ public class RestManager {
 
     public RestManager(List<Table> tables) {
         this.tablesBySize = tables.stream()
-                .collect(Collectors.groupingBy(Table::getSize, Collectors.toList()));;
+                .collect(Collectors.groupingBy(Table::getSize, Collectors.toList()));
         this.waitingQueue = new LinkedList<>();
         this.seatingMap = new HashMap<>();
     }
@@ -63,20 +65,20 @@ public class RestManager {
         Table backupTable = null;
         // Try to find a larger empty table with an empty-one as a priority, if not found - a first
         // backup table, which is not empty, but can accommodate- will be returned
-        for (int size = group.size + 1; size <= 6; size++) {
+        for (int size = group.size + 1; size <= MAX_GROUP_SIZE; size++) {
             if (tablesBySize.containsKey(size)) {
                 for (Table table : tablesBySize.get(size)) {
                     if (table.isEmpty()) {
                         assignTableSeats(group, table);
                         return true;
                     }
-                    if(backupTable == null && table.canAccommodate(group.size)){
+                    if (backupTable == null && table.canAccommodate(group.size)) {
                         backupTable = table;
                     }
                 }
             }
         }
-        if (backupTable != null){
+        if (backupTable != null) {
             assignTableSeats(group, backupTable);
             return true;
         }
@@ -84,18 +86,21 @@ public class RestManager {
         return false;
     }
 
-    private void assignTableSeats(ClientsGroup group, Table table){
+    private void assignTableSeats(ClientsGroup group, Table table) {
         table.seatGroup(group.size);
         seatingMap.put(group, table);
     }
 
 
     private void processQueue() {
+        var prevGroupSize = MAX_GROUP_SIZE + 1;
         Iterator<ClientsGroup> iterator = waitingQueue.iterator();
         while (iterator.hasNext()) {
             ClientsGroup group = iterator.next();
+            if (group.size >= prevGroupSize) continue;
             if (seatGroup(group)) {
                 iterator.remove();
+                prevGroupSize = group.getSize();
             }
         }
     }

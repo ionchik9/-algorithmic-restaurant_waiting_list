@@ -8,6 +8,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
+
+    public static final int MAX_GROUP_SIZE = 6;
+
     public static void main(String[] args) {
         List<Table> tables = Arrays.asList(new Table(2), new Table(3), new Table(4), new Table(5), new Table(6));
         RestManager manager = new RestManager(tables);
