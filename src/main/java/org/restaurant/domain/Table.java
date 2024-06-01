@@ -54,4 +54,13 @@ public class Table {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+//    todo unify
+    @Override
+    public String toString() {
+        return "Table{" +
+                "id=" + id +
+                ", size=" + size +
+                '}';
+    }
 }

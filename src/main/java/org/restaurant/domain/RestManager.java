@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import static org.restaurant.Main.MAX_GROUP_SIZE;
 
 public class RestManager {
-    private Map<Integer, List<Table>> tablesBySize;
+    private final Map<Integer, List<Table>> tablesBySize;
     private final Queue<ClientsGroup> waitingQueue;
     private final Map<ClientsGroup, Table> seatingMap;
 
@@ -103,5 +103,9 @@ public class RestManager {
                 prevGroupSize = group.getSize();
             }
         }
+    }
+
+    public int getQueueSize(){
+        return waitingQueue.size();
     }
 }
