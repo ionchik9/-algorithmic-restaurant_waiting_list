@@ -1,15 +1,17 @@
 package org.restaurant.domain;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class RestManager {
-    private final List<Table> tables;
+    private Map<Integer, List<Table>> tablesBySize;
     private final Queue<ClientsGroup> waitingQueue;
     private final Map<ClientsGroup, Table> seatingMap;
 
 
     public RestManager(List<Table> tables) {
-        this.tables = new ArrayList<>(tables);
+        this.tablesBySize = tables.stream()
+                .collect(Collectors.groupingBy(Table::getSize, Collectors.toList()));;
         this.waitingQueue = new LinkedList<>();
         this.seatingMap = new HashMap<>();
     }
@@ -44,35 +46,49 @@ public class RestManager {
     }
 
     private boolean seatGroup(ClientsGroup group) {
-        // First, try to find an exact match table
-        for (Table table : tables) {
-            if (table.getSize() == group.getSize() && table.getOccupiedSeats() == 0) {
-                table.seatGroup(group.getSize());
-                seatingMap.put(group, table);
+        // Try to find an exact match empty table
+        if (tablesBySize.containsKey(group.size)) {
+            var potentialTable = tablesBySize.get(group.size)
+                    .stream()
+                    .filter(Table::isEmpty)
+                    .findFirst();
+
+            if (potentialTable.isPresent()) {
+                assignTableSeats(group, potentialTable.get());
                 return true;
             }
+
         }
 
-        // If no exact match, try to find a larger table with enough space
-        for (Table table : tables) {
-            if (table.canAccommodate(group.getSize()) && table.getOccupiedSeats() == 0) {
-                table.seatGroup(group.getSize());
-                seatingMap.put(group, table);
-                return true;
+        Table backupTable = null;
+        // Try to find a larger empty table with an empty-one as a priority, if not found - a first
+        // backup table, which is not empty, but can accommodate- will be returned
+        for (int size = group.size + 1; size <= 6; size++) {
+            if (tablesBySize.containsKey(size)) {
+                for (Table table : tablesBySize.get(size)) {
+                    if (table.isEmpty()) {
+                        assignTableSeats(group, table);
+                        return true;
+                    }
+                    if(backupTable == null && table.canAccommodate(group.size)){
+                        backupTable = table;
+                    }
+                }
             }
         }
-
-        // If no empty table found, try to find a partially filled table with enough space
-        for (Table table : tables) {
-            if (table.canAccommodate(group.getSize()) && !table.isFull()) {
-                table.seatGroup(group.getSize());
-                seatingMap.put(group, table);
-                return true;
-            }
+        if (backupTable != null){
+            assignTableSeats(group, backupTable);
+            return true;
         }
 
         return false;
     }
+
+    private void assignTableSeats(ClientsGroup group, Table table){
+        table.seatGroup(group.size);
+        seatingMap.put(group, table);
+    }
+
 
     private void processQueue() {
         Iterator<ClientsGroup> iterator = waitingQueue.iterator();
