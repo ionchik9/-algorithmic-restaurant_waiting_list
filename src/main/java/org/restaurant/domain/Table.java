@@ -55,12 +55,8 @@ public class Table {
         return Objects.hash(id);
     }
 
-//    todo unify
     @Override
     public String toString() {
-        return "Table{" +
-                "id=" + id +
-                ", size=" + size +
-                '}';
+        return String.format("Table(id=%s, size=%d)", id, size);
     }
 }

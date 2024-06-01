@@ -28,4 +28,9 @@ public class ClientsGroup {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+    @Override
+    public String toString() {
+        return String.format("ClientsGroup(id=%s, size=%d)", id, size);
+    }
 }

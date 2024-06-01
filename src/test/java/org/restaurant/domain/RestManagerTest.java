@@ -24,7 +24,7 @@ public class RestManagerTest {
     }
 
     @Test
-    public void testOnArriveAndLookup() {
+    public void testOnArriveAndLookupNoQueue() {
         ClientsGroup group1 = new ClientsGroup(2);
         ClientsGroup group2 = new ClientsGroup(4);
 
@@ -33,6 +33,40 @@ public class RestManagerTest {
 
         restManager.onArrive(group2);
         assertEquals(table4, restManager.lookup(group2));
+
+        assertEquals(0, restManager.getQueueSize());
+    }
+
+    @Test
+    public void testPreferEmptyTableInsteadOfSharing() {
+        ClientsGroup group1 = new ClientsGroup(2);
+        ClientsGroup group2 = new ClientsGroup(2);
+        ClientsGroup group3 = new ClientsGroup(2);
+
+        restManager.onArrive(group1);
+        restManager.onArrive(group2);
+        restManager.onArrive(group3);
+
+
+        assertEquals(table2, restManager.lookup(group1));
+        assertEquals(table4, restManager.lookup(group2));
+        assertEquals(table6, restManager.lookup(group3));
+    }
+    @Test
+    public void testMultipleGroupsOnOneTable() {
+        ClientsGroup group1 = new ClientsGroup(2);
+        ClientsGroup group2 = new ClientsGroup(6);
+        ClientsGroup group3 = new ClientsGroup(2);
+        ClientsGroup group4 = new ClientsGroup(2);
+
+        restManager.onArrive(group1);
+        restManager.onArrive(group2);
+        restManager.onArrive(group3);
+        restManager.onArrive(group4);
+
+
+        assertEquals(table4, restManager.lookup(group3));
+        assertEquals(table4, restManager.lookup(group4)); // Group 3 has to share table 4 with group 4
     }
 
     @Test
@@ -45,8 +79,11 @@ public class RestManagerTest {
         restManager.onArrive(group2);
         restManager.onArrive(group3);
 
-        assertNull(restManager.lookup(group3)); // Group 3 should be in queue
+        // Group 3 should be in queue, as it's too big for the available table
+        assertNull(restManager.lookup(group3));
         assertEquals(1, restManager.getQueueSize());
+
+        System.out.println(group2);
     }
 
     @Test
@@ -63,17 +100,15 @@ public class RestManagerTest {
     }
 
     @Test
-    public void testLeaveQueue() {
+    public void testLeaveQueueNotSeated() {
         ClientsGroup group1 = new ClientsGroup(6);
         ClientsGroup group2 = new ClientsGroup(6);
-        ClientsGroup group3 = new ClientsGroup(4);
 
         restManager.onArrive(group1);
         restManager.onArrive(group2);
-        restManager.onArrive(group3);
 
         assertEquals(table6, restManager.lookup(group1));
-        assertEquals(table4, restManager.lookup(group3));
+//        group 2 should be in the queue
         assertNull(restManager.lookup(group2));
         assertEquals(1, restManager.getQueueSize());
 
@@ -82,27 +117,9 @@ public class RestManagerTest {
 
 //        should not trigger any change
         assertEquals(table6, restManager.lookup(group1));
-        assertEquals(table4, restManager.lookup(group3));
         assertNull(restManager.lookup(group2));
     }
 
-    @Test
-    public void testQueueGroupGetsSeatedOnLeave() {
-        ClientsGroup group1 = new ClientsGroup(6);
-        ClientsGroup group2 = new ClientsGroup(5);
-
-        restManager.onArrive(group1);
-        restManager.onArrive(group2);
-
-        assertEquals(1, restManager.getQueueSize());
-        assertNull(restManager.lookup(group2)); // Group 2 should be in the queue
-
-        restManager.onLeave(group1);
-
-        assertNull(restManager.lookup(group1));
-        assertEquals(table6, restManager.lookup(group2)); // Group 2 should get seated
-        assertEquals(0, restManager.getQueueSize());
-    }
 
     @Test
     public void testProcessQueueFairness() {
@@ -118,6 +135,7 @@ public class RestManagerTest {
 
         assertEquals(3, restManager.getQueueSize());
         assertNull(restManager.lookup(group4)); // Group 4 should be in the queue
+        assertNull(restManager.lookup(group5)); // Group 6 should be in the queue
         assertNull(restManager.lookup(group6)); // Group 6 should be in the queue
 
         restManager.onLeave(group1);
@@ -127,6 +145,11 @@ public class RestManagerTest {
 
         restManager.onLeave(group3);
         assertEquals(1, restManager.getQueueSize());
-        assertEquals(table6, restManager.lookup(group4)); // Group 4 should get seated, as it's the first timewise
+        assertEquals(table6, restManager.lookup(group4)); // Group 4 should get seated, as it's the first time-wise
+
+
+        restManager.onLeave(group4);
+        assertEquals(0, restManager.getQueueSize());
+        assertEquals(table6, restManager.lookup(group5)); // Group 5 gets seated, using the only fitting - bigger table
     }
 }
