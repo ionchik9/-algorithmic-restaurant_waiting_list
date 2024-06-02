@@ -49,8 +49,8 @@ public class RestManager {
 
     private boolean seatGroup(ClientsGroup group) {
         // Try to find an exact match empty table
-        if (tablesBySize.containsKey(group.size)) {
-            var potentialTable = tablesBySize.get(group.size)
+        if (tablesBySize.containsKey(group.getSize())) {
+            var potentialTable = tablesBySize.get(group.getSize())
                     .stream()
                     .filter(Table::isEmpty)
                     .findFirst();
@@ -63,16 +63,16 @@ public class RestManager {
         }
 
         Table backupTable = null;
-        // Try to find a larger empty table with an empty-one as a priority, if not found - a first
-        // backup table, which is not empty, but can accommodate- will be returned
-        for (int size = group.size + 1; size <= MAX_GROUP_SIZE; size++) {
+        // Try to find a larger empty table, if not found - a first
+        // backup table, which is not empty, but can accommodate, will be returned
+        for (int size = group.getSize() + 1; size <= MAX_GROUP_SIZE; size++) {
             if (tablesBySize.containsKey(size)) {
                 for (Table table : tablesBySize.get(size)) {
                     if (table.isEmpty()) {
                         assignTableSeats(group, table);
                         return true;
                     }
-                    if (backupTable == null && table.canAccommodate(group.size)) {
+                    if (backupTable == null && table.canAccommodate(group.getSize())) {
                         backupTable = table;
                     }
                 }
@@ -87,25 +87,29 @@ public class RestManager {
     }
 
     private void assignTableSeats(ClientsGroup group, Table table) {
-        table.seatGroup(group.size);
+        table.seatGroup(group.getSize());
         seatingMap.put(group, table);
     }
 
-
+//todo isfull check?
     private void processQueue() {
+//        while processing the queue, if previous group size didn't fit any table,
+//        it makes sense to check only for smaller size groups
         var prevGroupSize = MAX_GROUP_SIZE + 1;
-        Iterator<ClientsGroup> iterator = waitingQueue.iterator();
+        var iterator = waitingQueue.iterator();
         while (iterator.hasNext()) {
             ClientsGroup group = iterator.next();
-            if (group.size >= prevGroupSize) continue;
+//            skip as we know - this size wouldn't fit
+            if (group.getSize() >= prevGroupSize) continue;
             if (seatGroup(group)) {
                 iterator.remove();
                 prevGroupSize = group.getSize();
             }
         }
+
     }
 
-    public int getQueueSize(){
+    public int getQueueSize() {
         return waitingQueue.size();
     }
 }

@@ -152,4 +152,6 @@ public class RestManagerTest {
         assertEquals(0, restManager.getQueueSize());
         assertEquals(table6, restManager.lookup(group5)); // Group 5 gets seated, using the only fitting - bigger table
     }
+
+//    todo seat 2 small groups sync when a big group leaves the table
 }

@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public class ClientsGroup {
     private final UUID id;
-    public final int size; // number of clients
+    private final int size; // number of clients
 
     public ClientsGroup(int size) {
         this.id = UUID.randomUUID();
