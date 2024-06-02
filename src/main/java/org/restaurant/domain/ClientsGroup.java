@@ -1,11 +1,14 @@
 package org.restaurant.domain;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
 public class ClientsGroup {
     private final UUID id;
     private final int size; // number of clients
+
+    private Instant arrivalTime;
 
     public ClientsGroup(int size) {
         this.id = UUID.randomUUID();
@@ -14,6 +17,14 @@ public class ClientsGroup {
 
     public int getSize() {
         return size;
+    }
+
+    public Instant getArrivalTime() {
+        return arrivalTime;
+    }
+
+    public void setArrivalTime(Instant arrivalTime) {
+        this.arrivalTime = arrivalTime;
     }
 
     @Override

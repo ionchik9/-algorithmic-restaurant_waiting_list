@@ -29,15 +29,14 @@ public class WaitListQueue {
     }
 
     public ClientsGroup getMostAppropriateGroup(int freedCount){
-//        TODO set the comparator by timestamp
-        var pq = new PriorityQueue<ClientsGroup>();
+//        TODO fill multiple
+        var pq = new PriorityQueue<Queue<ClientsGroup>>(6, Comparator.comparing(q -> q.peek().getArrivalTime()));
         for (int i =0; i<=freedCount; i++){
             if (waitListBySize.containsKey(i)){
-                pq.add(waitListBySize.get(i).stream().findFirst().get());
+                pq.add(waitListBySize.get(i));
             }
         }
-//        todo remove from the LL
-        return pq.peek();
+        return pq.peek().poll();
     }
 
 
