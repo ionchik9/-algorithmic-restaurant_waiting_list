@@ -3,6 +3,7 @@ package org.restaurant;
 import org.restaurant.domain.ClientsGroup;
 import org.restaurant.domain.Table;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -10,19 +11,19 @@ import static org.restaurant.Main.MAX_GROUP_SIZE;
 
 public class RestManager {
     private final Map<Integer, List<Table>> tablesBySize;
-    private final Queue<ClientsGroup> waitingQueue;
+    private final WaitListQueue waitingQueue;
     private final Map<ClientsGroup, Table> seatingMap;
 
 
     public RestManager(List<Table> tables) {
         this.tablesBySize = tables.stream()
                 .collect(Collectors.groupingBy(Table::getSize, Collectors.toList()));
-        this.waitingQueue = new LinkedList<>();
+        this.waitingQueue = new WaitListQueue();
         this.seatingMap = new HashMap<>();
     }
 
     public int getQueueSize() {
-        return waitingQueue.size();
+        return waitingQueue.getSize();
     }
 
     // new client(s) show up
@@ -30,6 +31,7 @@ public class RestManager {
         // Try to seat the group
         if (!seatGroup(group)) {
             // If unable to seat, add to waiting queue
+            group.setArrivalTime(Instant.now());
             waitingQueue.add(group);
         }
     }
@@ -58,6 +60,7 @@ public class RestManager {
      * Attempts to seat a client group.
      * Checks an empty table of the exact size, if not found, searches for an empty bigger table,
      * if doesn't work - finds a partially occupied table with enough empty seats
+     *
      * @param group the client group
      * @return true if the group was seated, false otherwise
      */
@@ -118,27 +121,30 @@ public class RestManager {
      * Processes the queue to seat waiting groups based on freed seats.
      *
      * @param freedCount the number of freed seats
-     *
      */
 //    O(N) time complexity, where N is the number of groups in the wait-list,
-//    A potential optimization could involve using a Map of {fittingSize: FifoQueue},
-//    which would result in a constant lookup time.
-//    In that case, removing from the queue would require finding the group in all the queues,
-//    where it is present in order to perform a consistent removal, which again might be sorted out
-//    with a lookup Map, but it requires more consultation whether using that much space is desirable.
-
+//    private void processQueue(int freedCount, Table table) {
+//        int availableSeats = freedCount;
+//        var iterator = waitingQueue.iterator();
+//        while (iterator.hasNext() && availableSeats > 0) {
+//            ClientsGroup group = iterator.next();
+//            if (group.getSize() <= availableSeats){
+//                assignTableSeats(group, table);
+//                iterator.remove();
+//                availableSeats -= group.getSize();
+//            }
+//        }
+//    }
     private void processQueue(int freedCount, Table table) {
         int availableSeats = freedCount;
-        var iterator = waitingQueue.iterator();
-        while (iterator.hasNext() && availableSeats > 0) {
-            ClientsGroup group = iterator.next();
-            if (group.getSize() <= availableSeats){
-                assignTableSeats(group, table);
-                iterator.remove();
-                availableSeats -= group.getSize();
-            }
+//        todo potential infinite loop
+        while (availableSeats > 0 && !waitingQueue.isEmpty()) {
+            ClientsGroup groupToBeSeated = waitingQueue.pollMostAppropriateGroup(availableSeats);
+//            all the groups in the waitList are bigger than freed-up number of seats
+            if(groupToBeSeated == null) break;
+            assignTableSeats(groupToBeSeated, table);
+            availableSeats -= groupToBeSeated.getSize();
         }
-
     }
 
 }
