@@ -1,13 +1,15 @@
-package org.restaurant.domain;
+package org.restaurant;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.restaurant.RestManager;
+import org.restaurant.domain.ClientsGroup;
+import org.restaurant.domain.Table;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class RestManagerTest {
     private RestManager restManager;
