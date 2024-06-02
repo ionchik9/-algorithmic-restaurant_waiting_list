@@ -2,6 +2,7 @@ package org.restaurant.domain;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.restaurant.RestManager;
 
 import java.util.Arrays;
 import java.util.List;

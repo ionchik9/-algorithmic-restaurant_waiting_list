@@ -1,4 +1,7 @@
-package org.restaurant.domain;
+package org.restaurant;
+
+import org.restaurant.domain.ClientsGroup;
+import org.restaurant.domain.Table;
 
 import java.util.*;
 import java.util.stream.Collectors;
