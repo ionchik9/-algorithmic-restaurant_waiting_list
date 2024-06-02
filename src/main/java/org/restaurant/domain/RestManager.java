@@ -34,7 +34,7 @@ public class RestManager {
             Table table = seatingMap.get(group);
             table.leaveGroup(group.getSize());
             seatingMap.remove(group);
-            processQueue(); // Try to seat waiting groups
+            processQueue(group.getSize()); // Try to seat waiting groups
         } else {
             // If not seated, remove from the waiting queue
             waitingQueue.remove(group);
@@ -62,9 +62,9 @@ public class RestManager {
 
         }
 
-        Table backupTable = null;
         // Try to find a larger empty table, if not found - a first
         // backup table, which is not empty, but can accommodate, will be returned
+        Table backupTable = null;
         for (int size = group.getSize() + 1; size <= MAX_GROUP_SIZE; size++) {
             if (tablesBySize.containsKey(size)) {
                 for (Table table : tablesBySize.get(size)) {
@@ -91,19 +91,19 @@ public class RestManager {
         seatingMap.put(group, table);
     }
 
-//todo isfull check?
-    private void processQueue() {
+    private void processQueue(int freedCount) {
 //        while processing the queue, if previous group size didn't fit any table,
 //        it makes sense to check only for smaller size groups
-        var prevGroupSize = MAX_GROUP_SIZE + 1;
+
+        int occupiedCountDuringTheProcess = 0;
         var iterator = waitingQueue.iterator();
         while (iterator.hasNext()) {
             ClientsGroup group = iterator.next();
-//            skip as we know - this size wouldn't fit
-            if (group.getSize() >= prevGroupSize) continue;
-            if (seatGroup(group)) {
+            int availableSeats = freedCount - occupiedCountDuringTheProcess;
+
+            if (group.getSize() <= availableSeats && seatGroup(group)){
                 iterator.remove();
-                prevGroupSize = group.getSize();
+                occupiedCountDuringTheProcess += group.getSize();
             }
         }
 
