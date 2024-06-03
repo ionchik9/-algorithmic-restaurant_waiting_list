@@ -14,6 +14,7 @@ public class WaitListQueue {
         this.waitListBySize = new HashMap<>();
     }
 
+
     public int getSize() {
         return waitListBySize.values().stream().flatMapToInt(queue -> IntStream.of(queue.size())).sum();
     }
@@ -23,26 +24,43 @@ public class WaitListQueue {
     }
 
 
+    /**
+     * Adds a group to the waitlist.
+     *
+     * @param group the group to add to the waitlist.
+     */
+//    O(1)
     public void add(ClientsGroup group) {
-        if (waitListBySize.containsKey(group.getSize())) {
-            waitListBySize.get(group.getSize()).add(group);
-            return;
-        }
-        Queue<ClientsGroup> ll = new LinkedList<>();
-        ll.add(group);
-        waitListBySize.put(group.getSize(), ll);
+        waitListBySize.computeIfAbsent(group.getSize(), k -> new LinkedList<>()).add(group);
     }
 
+    /**
+     * Removes a group from the waitlist.
+     *
+     * @param group the group to remove from the waitlist.
+     */
+//    O(N), N - desired queue size
     public void remove(ClientsGroup group) {
-        waitListBySize.get(group.getSize()).remove(group);
+        Queue<ClientsGroup> queue = waitListBySize.get(group.getSize());
+        if(queue != null) {
+            queue.remove(group);
+        }
     }
 
+    /**
+     * Polls the most appropriate group from the waitList based on the available freed seats.
+     * The method selects the group that would fit to be seated and has the earliest arrival time.
+     *
+     * @param freedCount the number of freed seats available.
+     * @return the most appropriate group that can be seated, or null if no suitable group is found.
+     */
+//    O(f * log f), where f is the number of group sizes (f<=6) --> O(1)
     public ClientsGroup pollMostAppropriateGroup(int freedCount) {
         var pq = new PriorityQueue<Queue<ClientsGroup>>(6, Comparator.comparing(q -> q.peek().getArrivalTime()));
         for (int i = 1; i <= freedCount; i++) {
             if (waitListBySize.containsKey(i)) {
                 var q = waitListBySize.get(i);
-                if (q != null && !q.isEmpty()) pq.add(waitListBySize.get(i));
+                if (q != null && !q.isEmpty()) pq.add(q);
             }
         }
         return pq.peek() != null ? pq.peek().poll() : null;

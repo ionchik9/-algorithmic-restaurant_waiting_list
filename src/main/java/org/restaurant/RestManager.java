@@ -137,7 +137,6 @@ public class RestManager {
 //    }
     private void processQueue(int freedCount, Table table) {
         int availableSeats = freedCount;
-//        todo potential infinite loop
         while (availableSeats > 0 && !waitingQueue.isEmpty()) {
             ClientsGroup groupToBeSeated = waitingQueue.pollMostAppropriateGroup(availableSeats);
 //            all the groups in the waitList are bigger than freed-up number of seats
