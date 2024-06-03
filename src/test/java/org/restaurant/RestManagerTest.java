@@ -156,5 +156,26 @@ public class RestManagerTest {
         assertEquals(table6, restManager.lookup(group5)); // Group 5 gets seated, using the only fitting - bigger table
     }
 
-//    todo seat 2 small groups sync when a big group leaves the table
+
+    @Test
+    public void testProcessQueue2GroupsSimultaneously() {
+
+        ClientsGroup group1 = new ClientsGroup(2);
+        ClientsGroup group2 = new ClientsGroup(4);
+        ClientsGroup group3 = new ClientsGroup(6);
+
+        ClientsGroup group4 = new ClientsGroup(2);
+        ClientsGroup group5 = new ClientsGroup(2);
+
+        List.of(group1, group2, group3, group4, group5)
+                .forEach(group -> restManager.onArrive(group));
+
+        assertEquals(2, restManager.getQueueSize());
+
+        restManager.onLeave(group2);
+        assertEquals(0, restManager.getQueueSize());
+        assertEquals(table4, restManager.lookup(group4)); // Groups 4 and 5 should both get seated
+        assertEquals(table4, restManager.lookup(group5));
+
+    }
 }

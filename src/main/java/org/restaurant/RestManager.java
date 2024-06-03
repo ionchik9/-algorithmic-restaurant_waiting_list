@@ -50,8 +50,10 @@ public class RestManager {
         }
     }
 
-    // return table where a given client group is seated,
-    // or null if it is still queueing or has already left
+    /**
+     * @return Table where a given client group is seated,
+     * or null if it is still queueing or has already left
+     */
     public Table lookup(ClientsGroup group) {
         return seatingMap.get(group);
     }
@@ -59,47 +61,44 @@ public class RestManager {
     /**
      * Attempts to seat a client group.
      * Checks an empty table of the exact size, if not found, searches for an empty bigger table,
-     * if doesn't work - finds a partially occupied table with enough empty seats
+     * if it doesn't work - finds a partially occupied table with enough empty seats
      *
      * @param group the client group
      * @return true if the group was seated, false otherwise
      */
-//    Time complexity: O(m*k), where m is the count of different table sizes (m<=6) ->
-//    can be simplified to O(k), where k is the number of tables of a certain size
+//    Time complexity: O(m*k), where m is the count of different table sizes (m<=6) -->
+//     O(k), where k is the number of tables of a certain size
     private boolean seatGroup(ClientsGroup group) {
         // Try to find an exact match empty table
         if (tablesBySize.containsKey(group.getSize())) {
-            var potentialTable = tablesBySize.get(group.getSize())
+            var matchingSizeEmptyTable = tablesBySize.get(group.getSize())
                     .stream()
                     .filter(Table::isEmpty)
                     .findFirst();
 
-            if (potentialTable.isPresent()) {
-                assignTableSeats(group, potentialTable.get());
-                return true;
+            if (matchingSizeEmptyTable.isPresent()) {
+                return assignTableSeats(group, matchingSizeEmptyTable.get());
             }
 
         }
 
         // Try to find a larger empty table, if not found - a first
-        // backup table, which is not empty, but can accommodate, will be returned
-        Table backupTable = null;
+        // partially occupied table, which is not empty, but can accommodate, will be assigned
+        Table partiallyOccupiedTable = null;
         for (int size = group.getSize() + 1; size <= MAX_GROUP_SIZE; size++) {
             if (tablesBySize.containsKey(size)) {
                 for (Table table : tablesBySize.get(size)) {
                     if (table.isEmpty()) {
-                        assignTableSeats(group, table);
-                        return true;
+                        return assignTableSeats(group, table);
                     }
-                    if (backupTable == null && table.canAccommodate(group.getSize())) {
-                        backupTable = table;
+                    if (partiallyOccupiedTable == null && table.canAccommodate(group.getSize())) {
+                        partiallyOccupiedTable = table;
                     }
                 }
             }
         }
-        if (backupTable != null) {
-            assignTableSeats(group, backupTable);
-            return true;
+        if (partiallyOccupiedTable != null) {
+            return assignTableSeats(group, partiallyOccupiedTable);
         }
 
         return false;
@@ -111,35 +110,24 @@ public class RestManager {
      *
      * @param group the client group
      * @param table the table to seat the group at
+     * @return true
      */
-    private void assignTableSeats(ClientsGroup group, Table table) {
+    private boolean assignTableSeats(ClientsGroup group, Table table) {
         table.seatGroup(group.getSize());
-        seatingMap.put(group, table);
+         seatingMap.put(group, table);
+         return true;
     }
 
     /**
-     * Processes the queue to seat waiting groups based on freed seats.
+     * Processes the queue to assign seats for waiting groups based on freed seats.
      *
      * @param freedCount the number of freed seats
      */
-//    O(N) time complexity, where N is the number of groups in the wait-list,
-//    private void processQueue(int freedCount, Table table) {
-//        int availableSeats = freedCount;
-//        var iterator = waitingQueue.iterator();
-//        while (iterator.hasNext() && availableSeats > 0) {
-//            ClientsGroup group = iterator.next();
-//            if (group.getSize() <= availableSeats){
-//                assignTableSeats(group, table);
-//                iterator.remove();
-//                availableSeats -= group.getSize();
-//            }
-//        }
-//    }
     private void processQueue(int freedCount, Table table) {
         int availableSeats = freedCount;
-        while (availableSeats > 0 && !waitingQueue.isEmpty()) {
+        while (availableSeats > 0) {
             ClientsGroup groupToBeSeated = waitingQueue.pollMostAppropriateGroup(availableSeats);
-//            all the groups in the waitList are bigger than freed-up number of seats
+//           if there's no appropriate size group in the waitList break (all the groups in the waitList are bigger than the available number of seats).
             if(groupToBeSeated == null) break;
             assignTableSeats(groupToBeSeated, table);
             availableSeats -= groupToBeSeated.getSize();

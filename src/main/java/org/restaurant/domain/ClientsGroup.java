@@ -7,7 +7,6 @@ import java.util.UUID;
 public class ClientsGroup {
     private final UUID id;
     private final int size; // number of clients
-
     private Instant arrivalTime;
 
     public ClientsGroup(int size) {
