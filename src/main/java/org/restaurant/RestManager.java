@@ -43,7 +43,7 @@ public class RestManager {
             Table table = seatingMap.get(group);
             table.leaveGroup(group.getSize());
             seatingMap.remove(group);
-            processQueue(group.getSize(), table); // Try to seat waiting groups
+            processQueue(table); // Try to seat waiting groups
         } else {
             // If not seated, remove from the waiting queue
             waitingQueue.remove(group);
@@ -121,15 +121,14 @@ public class RestManager {
     /**
      * Processes the queue to assign seats for waiting groups based on freed seats.
      *
-     * @param freedCount the number of freed seats
      */
-    private void processQueue(int freedCount, Table table) {
-        int availableSeats = freedCount;
+    private void processQueue(Table freedTable) {
+        int availableSeats = freedTable.getSize() - freedTable.getOccupiedSeats();
         while (availableSeats > 0) {
             ClientsGroup groupToBeSeated = waitingQueue.pollMostAppropriateGroup(availableSeats);
 //           if there's no appropriate size group in the waitList break (all the groups in the waitList are bigger than the available number of seats).
             if(groupToBeSeated == null) break;
-            assignTableSeats(groupToBeSeated, table);
+            assignTableSeats(groupToBeSeated, freedTable);
             availableSeats -= groupToBeSeated.getSize();
         }
     }
