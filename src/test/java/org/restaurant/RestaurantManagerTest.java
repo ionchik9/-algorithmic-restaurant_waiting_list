@@ -11,8 +11,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class RestManagerTest {
-    private RestManager restManager;
+public class RestaurantManagerTest {
+    private RestaurantManager restManager;
     private Table table2;
     private Table table4;
     private Table table6;
@@ -23,7 +23,7 @@ public class RestManagerTest {
         table4 = new Table(4);
         table6 = new Table(6);
         List<Table> tables = Arrays.asList(table2, table4, table6);
-        restManager = new RestManager(tables);
+        restManager = new RestaurantManager(tables);
     }
 
     @Test

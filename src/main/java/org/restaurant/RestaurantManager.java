@@ -9,13 +9,13 @@ import java.util.stream.Collectors;
 
 import static org.restaurant.Main.MAX_GROUP_SIZE;
 
-public class RestManager {
+public class RestaurantManager {
     private final Map<Integer, List<Table>> tablesBySize;
     private final WaitListQueue waitingQueue;
     private final Map<ClientsGroup, Table> seatingMap;
 
 
-    public RestManager(List<Table> tables) {
+    public RestaurantManager(List<Table> tables) {
         this.tablesBySize = tables.stream()
                 .collect(Collectors.groupingBy(Table::getSize, Collectors.toList()));
         this.waitingQueue = new WaitListQueue();
@@ -69,23 +69,10 @@ public class RestManager {
 //    Time complexity: O(m*k), where m is the count of different table sizes (m<=6) -->
 //     O(k), where k is the number of tables of a certain size
     private boolean seatGroup(ClientsGroup group) {
-        // Try to find an exact match empty table
-        if (tablesBySize.containsKey(group.getSize())) {
-            var matchingSizeEmptyTable = tablesBySize.get(group.getSize())
-                    .stream()
-                    .filter(Table::isEmpty)
-                    .findFirst();
-
-            if (matchingSizeEmptyTable.isPresent()) {
-                return assignTableSeats(group, matchingSizeEmptyTable.get());
-            }
-
-        }
-
-        // Try to find a larger empty table, if not found - a first
+        // Try to find an empty table, if not found - a first
         // partially occupied table, which is not empty, but can accommodate, will be assigned
         Table partiallyOccupiedTable = null;
-        for (int size = group.getSize() + 1; size <= MAX_GROUP_SIZE; size++) {
+        for (int size = group.getSize(); size <= MAX_GROUP_SIZE; size++) {
             if (tablesBySize.containsKey(size)) {
                 for (Table table : tablesBySize.get(size)) {
                     if (table.isEmpty()) {
