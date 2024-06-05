@@ -19,10 +19,6 @@ public class WaitListQueue {
         return waitListBySize.values().stream().flatMapToInt(queue -> IntStream.of(queue.size())).sum();
     }
 
-    public boolean isEmpty() {
-        return getSize() == 0;
-    }
-
 
     /**
      * Adds a group to the waitList.
